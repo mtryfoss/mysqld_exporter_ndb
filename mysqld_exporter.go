@@ -89,6 +89,7 @@ var scrapers = map[collector.Scraper]bool{
 	collector.ScrapeHeartbeat{}:                           false,
 	collector.ScrapeSlaveHosts{}:                          false,
 	collector.ScrapeNdbinfoMemoryusage{}:                  false,
+	collector.ScrapeNdbinfoThreadstat{}:                   false,
 }
 
 func parseMycnf(config interface{}) (string, error) {

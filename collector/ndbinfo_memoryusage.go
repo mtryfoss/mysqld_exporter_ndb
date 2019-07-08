@@ -93,16 +93,16 @@ func (ScrapeNdbinfoMemoryusage) Scrape(ctx context.Context, db *sql.DB, ch chan<
 			return err
 		}
 		ch <- prometheus.MustNewConstMetric(
-			ndbinfoMemoryusageUsedDesc, prometheus.CounterValue, float64(used),
+			ndbinfoMemoryusageUsedDesc, prometheus.GaugeValue, float64(used),
 			strconv.FormatUint(nodeID, 10), memoryType)
 		ch <- prometheus.MustNewConstMetric(
-			ndbinfoMemoryusageTotalDesc, prometheus.CounterValue, float64(total),
+			ndbinfoMemoryusageTotalDesc, prometheus.GaugeValue, float64(total),
 			strconv.FormatUint(nodeID, 10), memoryType)
 		ch <- prometheus.MustNewConstMetric(
-			ndbinfoMemoryusagePagesDesc, prometheus.CounterValue, float64(usedPages),
+			ndbinfoMemoryusagePagesDesc, prometheus.GaugeValue, float64(usedPages),
 			strconv.FormatUint(nodeID, 10), memoryType)
 		ch <- prometheus.MustNewConstMetric(
-			ndbinfoMemoryusageTotalPagesDesc, prometheus.CounterValue, float64(totalPages),
+			ndbinfoMemoryusageTotalPagesDesc, prometheus.GaugeValue, float64(totalPages),
 			strconv.FormatUint(nodeID, 10), memoryType)
 	}
 	return nil
