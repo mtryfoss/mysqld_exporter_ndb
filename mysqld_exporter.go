@@ -93,6 +93,11 @@ var scrapers = map[collector.Scraper]bool{
 	collector.ScrapeNdbinfoClusterOperations{}:            true,
 	collector.ScrapeNdbinfoClusterTransactions{}:          true,
 	collector.ScrapeNdbinfoClusterLocks{}:                 true,
+	collector.ScrapeNdbinfoLogbuffers{}:                   true,
+	collector.ScrapeNdbinfoDiskpagebuffers{}:              true,
+	collector.ScrapeNdbinfoDiskWriteSpeedAggregate{}:      true,
+	collector.ScrapeNdbinfoProcesses{}:                    true,
+	collector.ScrapeFiles{}:                               true,
 }
 
 func parseMycnf(config interface{}) (string, error) {
