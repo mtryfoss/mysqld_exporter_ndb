@@ -23,8 +23,8 @@ import (
 )
 
 const infoSchemaFilesQuery = `
-		SELECT TABLESPACE_NAME, LOGFILE_GROUP_NAME, ENGINE, FILE_TYPE,
-		   FREE_EXTENTS, TOTAL_EXTENTS, EXTENT_SIZE, INITIAL_SIZE
+		SELECT TABLESPACE_NAME, LOGFILE_GROUP_NAME, ENGINE, FILE_TYPE, FILE_NAME
+		   FREE_EXTENTS, TOTAL_EXTENTS, EXTENT_SIZE, INITIAL_SIZE, EXTRA
 		  FROM information_schema.files
 		  WHERE FILE_NAME != ""
 		`
@@ -34,22 +34,22 @@ var (
 	infoSchemaTableFilesFreeExtentsDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, informationSchema, "files_free_extents"),
 		"The number of extents which have not yet been used by the file",
-		[]string{"tablespace", "logfileGroup", "engine", "fileType"}, nil,
+		[]string{"tablespace", "logfileGroup", "engine", "fileType", "fileName", "extra"}, nil,
 	)
 	infoSchemaTableFilesTotalExtentsDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, informationSchema, "files_total_extents"),
 		"The total number of extents allocated to the file",
-		[]string{"tablespace", "logfileGroup", "engine", "fileType"}, nil,
+		[]string{"tablespace", "logfileGroup", "engine", "fileType", "fileName", "extra"}, nil,
 	)
 	infoSchemaTableFilesExtentSizeDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, informationSchema, "files_extent_size"),
 		"The size of an extent for the file in bytes",
-		[]string{"tablespace", "logfileGroup", "engine", "fileType"}, nil,
+		[]string{"tablespace", "logfileGroup", "engine", "fileType", "fileName", "extra"}, nil,
 	)
 	infoSchemaTableFilesInitialSizeDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, informationSchema, "files_initial_size"),
 		"The size of the file in bytes",
-		[]string{"tablespace", "logfileGroup", "engine", "fileType"}, nil,
+		[]string{"tablespace", "logfileGroup", "engine", "fileType", "fileName", "extra"}, nil,
 	)
 )
 
@@ -81,34 +81,34 @@ func (ScrapeFiles) Scrape(ctx context.Context, db *sql.DB, ch chan<- prometheus.
 
 	var (
 		tablespaceName, logfileGroupName      sql.NullString
-		engine, fileType                      string
+		engine, fileType, fileName, extra     string
 		freeExtents                           sql.NullInt64
 		totalExtents, extentSize, initialSize uint64
 	)
 
 	for infoSchemaFilesRows.Next() {
 		err = infoSchemaFilesRows.Scan(&tablespaceName, &logfileGroupName,
-			&engine, &fileType, &freeExtents, &totalExtents, &extentSize, &initialSize)
+			&engine, &fileType, &fileName, &freeExtents, &totalExtents, &extentSize, &initialSize, &extra)
 		if err != nil {
 			return err
 		}
 		if freeExtents.Valid {
 			ch <- prometheus.MustNewConstMetric(
 				infoSchemaTableFilesFreeExtentsDesc, prometheus.GaugeValue, float64(freeExtents.Int64),
-				tablespaceName.String, logfileGroupName.String, engine, fileType,
+				tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
 			)
 		}
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesTotalExtentsDesc, prometheus.GaugeValue, float64(totalExtents),
-			tablespaceName.String, logfileGroupName.String, engine, fileType,
+			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesExtentSizeDesc, prometheus.GaugeValue, float64(extentSize),
-			tablespaceName.String, logfileGroupName.String, engine, fileType,
+			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesInitialSizeDesc, prometheus.GaugeValue, float64(initialSize),
-			tablespaceName.String, logfileGroupName.String, engine, fileType,
+			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
 		)
 	}
 	return nil
