@@ -23,7 +23,7 @@ import (
 )
 
 const infoSchemaFilesQuery = `
-		SELECT TABLESPACE_NAME, LOGFILE_GROUP_NAME, ENGINE, FILE_TYPE, FILE_NAME
+		SELECT TABLESPACE_NAME, LOGFILE_GROUP_NAME, ENGINE, FILE_TYPE, FILE_NAME, 
 		   FREE_EXTENTS, TOTAL_EXTENTS, EXTENT_SIZE, INITIAL_SIZE, EXTRA
 		  FROM information_schema.files
 		  WHERE FILE_NAME != ""
@@ -80,10 +80,10 @@ func (ScrapeFiles) Scrape(ctx context.Context, db *sql.DB, ch chan<- prometheus.
 	defer infoSchemaFilesRows.Close()
 
 	var (
-		tablespaceName, logfileGroupName      sql.NullString
-		engine, fileType, fileName, extra     string
-		freeExtents                           sql.NullInt64
-		totalExtents, extentSize, initialSize uint64
+		tablespaceName, logfileGroupName, extra sql.NullString
+		engine, fileType, fileName              string
+		freeExtents                             sql.NullInt64
+		totalExtents, extentSize, initialSize   uint64
 	)
 
 	for infoSchemaFilesRows.Next() {
@@ -92,23 +92,39 @@ func (ScrapeFiles) Scrape(ctx context.Context, db *sql.DB, ch chan<- prometheus.
 		if err != nil {
 			return err
 		}
+
+		tablespaceNameStr := ""
+		if tablespaceName.Valid {
+			tablespaceNameStr = tablespaceName.String
+		}
+
+		logfileGroupNameStr := ""
+		if logfileGroupName.Valid {
+			logfileGroupNameStr = logfileGroupName.String
+		}
+
+		extraStr := ""
+		if extra.Valid {
+			extraStr = extra.String
+		}
+
 		if freeExtents.Valid {
 			ch <- prometheus.MustNewConstMetric(
 				infoSchemaTableFilesFreeExtentsDesc, prometheus.GaugeValue, float64(freeExtents.Int64),
-				tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
+				tablespaceNameStr, logfileGroupNameStr, engine, fileType, fileName, extraStr,
 			)
 		}
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesTotalExtentsDesc, prometheus.GaugeValue, float64(totalExtents),
-			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
+			tablespaceNameStr, logfileGroupNameStr, engine, fileType, fileName, extraStr,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesExtentSizeDesc, prometheus.GaugeValue, float64(extentSize),
-			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
+			tablespaceNameStr, logfileGroupNameStr, engine, fileType, fileName, extraStr,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			infoSchemaTableFilesInitialSizeDesc, prometheus.GaugeValue, float64(initialSize),
-			tablespaceName.String, logfileGroupName.String, engine, fileType, fileName, extra,
+			tablespaceNameStr, logfileGroupNameStr, engine, fileType, fileName, extraStr,
 		)
 	}
 	return nil
