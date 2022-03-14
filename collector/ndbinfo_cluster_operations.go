@@ -24,7 +24,7 @@ import (
 )
 
 const ndbinfoClusterOperationsQuery = `
-	SELECT node_id, operation_type, state, count(*)
+	SELECT node_id, operation_type, IFNULL(state,'') AS state, count(*)
 	FROM ndbinfo.cluster_operations
 	GROUP BY node_id, operation_type, state
 	`
